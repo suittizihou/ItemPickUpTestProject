@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using UnityEngine;
 
 public class ItemSerch : MonoBehaviour
@@ -8,9 +9,68 @@ public class ItemSerch : MonoBehaviour
 
     public List<GameObject> ItemList { get; private set; } = new List<GameObject>();
 
+    private void Start()
+    {
+        // アイテム削除関数を実行開始
+        StartCoroutine(LateFixedUpdate());
+    }
+
     private void FixedUpdate()
     {
+        // アイテムリストを削除する
         if (ItemList.Count >= 1) ItemList.Clear();
+    }
+
+    /// <summary>
+    /// 押し出し処理がないオブジェクトとの当たり判定イベント（当たってる間呼ばれる）
+    /// </summary>
+    /// <param name="other"></param>
+    private void OnTriggerStay(Collider other)
+    {
+        if (other.CompareTag("Item"))
+        {
+            ItemList.Add(other.gameObject);
+        }
+    }
+
+    /// <summary>
+    /// FixedUpdateの実行タイミングで一番最後に実行される関数
+    /// </summary>
+    /// <returns></returns>
+    private IEnumerator LateFixedUpdate()
+    {
+        var waitForFixed = new WaitForFixedUpdate();
+        while (true)
+        {
+            PickUpNearItemFirst();
+            yield return waitForFixed;
+        }
+    }
+
+    /// <summary>
+    /// 一番近場のアイテムを配列の先頭に持ってくる
+    /// </summary>
+    /// <returns></returns>
+    private void PickUpNearItemFirst()
+    {
+        if (ItemList.Count <= 1) return;
+
+        var originPos = originPoint.transform.position;
+        // 初期最小値を設定
+        var minDirection = Vector3.Distance(ItemList[0].transform.position, originPos);
+        // 二つ目のアイテムから取得ポイントとの距離を計算
+        for (int itemNum = 1; itemNum < ItemList.Count; itemNum++)
+        {
+            var direction = Vector3.Distance(ItemList[itemNum].transform.position, originPos);
+            // より近いオブジェクトを0番目の要素に代入
+            if (minDirection > direction)
+            {
+                minDirection = direction;
+                var temp = ItemList[0];
+                ItemList[0] = ItemList[itemNum];
+                ItemList[itemNum] = temp;
+            }
+        }
     }
 
     /// <summary>
@@ -20,32 +80,8 @@ public class ItemSerch : MonoBehaviour
     public GameObject GetNearItem()
     {
         if (ItemList.Count <= 0) return null;
-        if (ItemList.Count == 1) return ItemList[0];
-
-        var nearItem = ItemList[0];
-        // 初期最小値を設定
-        var minDirection = float.MaxValue;
-        // 二つ目のアイテムから取得ポイントとの距離を計算
-        for(int itemNum = 0; itemNum < ItemList.Count; itemNum++)
-        {
-            if (ItemList[itemNum] == null) continue;
-            var direction = Vector3.Distance(ItemList[itemNum].transform.position, originPoint.transform.position);
-            // より近いオブジェクトを代入
-            if (minDirection > direction)
-            {
-                minDirection = direction;
-                nearItem = ItemList[itemNum];
-            }
-        }
-        return nearItem;
-    }
-
-    private void OnTriggerStay(Collider other)
-    {
-        if (other.CompareTag("Item"))
-        {
-            ItemList.Add(other.gameObject);
-        }
+        
+        return ItemList[0];
     }
 
 #if UNITY_EDITOR
