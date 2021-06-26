@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class ItemSerch : MonoBehaviour
 {
@@ -9,27 +10,42 @@ public class ItemSerch : MonoBehaviour
 
     public List<GameObject> ItemList { get; private set; } = new List<GameObject>();
 
+    // アイテムリストが更新されたか
+    private bool isItemListUpdate;
+
     private void Start()
     {
         // アイテム削除関数を実行開始
         StartCoroutine(LateFixedUpdate());
     }
 
-    private void FixedUpdate()
-    {
-        // アイテムリストを削除する
-        if (ItemList.Count >= 1) ItemList.Clear();
-    }
-
     /// <summary>
-    /// 押し出し処理がないオブジェクトとの当たり判定イベント（当たってる間呼ばれる）
+    /// オブジェクトと接触した時呼ばれる
     /// </summary>
     /// <param name="other"></param>
-    private void OnTriggerStay(Collider other)
+    private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Item"))
         {
+            isItemListUpdate = true;
+            var item = other.GetComponent<Item>();
+            // アイテムを拾った時アイテムリストから除外するイベントを登録
+            item.onPickUp.AddListener(() => ItemList.Remove(other.gameObject));
+            item.onPickUp.AddListener(() => isItemListUpdate = true);
             ItemList.Add(other.gameObject);
+        }
+    }
+
+    /// <summary>
+    /// オブジェクトが離れた時呼ばれる
+    /// </summary>
+    /// <param name="other"></param>
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.CompareTag("Item"))
+        {
+            isItemListUpdate = true;
+            ItemList.Remove(other.gameObject);
         }
     }
 
@@ -42,7 +58,12 @@ public class ItemSerch : MonoBehaviour
         var waitForFixed = new WaitForFixedUpdate();
         while (true)
         {
-            PickUpNearItemFirst();
+            // アイテムリストが更新された時だけ要素の入れ替えを実行
+            if (isItemListUpdate)
+            {
+                PickUpNearItemFirst();
+                isItemListUpdate = false;
+            }
             yield return waitForFixed;
         }
     }
