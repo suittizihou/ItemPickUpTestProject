@@ -84,11 +84,11 @@ public class ItemSerch : MonoBehaviour
         return ItemList[0];
     }
 
-#if UNITY_EDITOR
+#if UNITY_EDITOR // UnityEditorのみ
     /// <summary>
     /// 拾う対象のアイテムにギズモを表示
     /// </summary>
-    public void SetPickUpTargetItemMarker()
+    private void SetPickUpTargetItemMarker()
     {
         var item = GetNearItem();
         if (item == null) return;
