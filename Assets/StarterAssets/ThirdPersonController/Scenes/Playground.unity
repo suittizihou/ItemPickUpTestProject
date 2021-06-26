@@ -461,7 +461,7 @@ GameObject:
   - component: {fileID: 742150190}
   - component: {fileID: 742150191}
   m_Layer: 8
-  m_Name: ItemSerchObject
+  m_Name: ItemSerchArea
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
