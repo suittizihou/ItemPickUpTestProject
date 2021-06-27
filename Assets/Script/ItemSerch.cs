@@ -9,6 +9,8 @@ public class ItemSerch : MonoBehaviour
 
     public List<GameObject> ItemList { get; private set; } = new List<GameObject>();
 
+    [Header("アイテムリストを常に更新")]
+    public bool isAlwaysUpdate = true;
     // アイテムリストが更新されたか
     private bool isItemListUpdate;
 
@@ -57,8 +59,8 @@ public class ItemSerch : MonoBehaviour
         var waitForFixed = new WaitForFixedUpdate();
         while (true)
         {
-            // アイテムリストが更新された時だけ要素の入れ替えを実行
-            if (isItemListUpdate)
+            // 常に更新フラグが立っているか、アイテムリストが更新された時だけ要素の入れ替えを実行
+            if (isAlwaysUpdate || isItemListUpdate)
             {
                 PickUpNearItemFirst();
                 isItemListUpdate = false;
